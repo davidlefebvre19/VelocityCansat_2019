@@ -4,7 +4,7 @@
 #include <SD.h>
 #include <SoftwareSerial.h>
 #include <Adafruit_Sensor.h>
-#include <Adafruit_BME680.h>
+#include "Adafruit_BME680.h"
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 
@@ -16,7 +16,7 @@ Adafruit_BME680 bme; // I2C
 float TempBME,PresBME,AltBME,Humidity,Gas;
 void getBME() {
   // il faut lire la doc les enfants ... :
-  if (! bme.performReading()) { // je lance la lecture
+  if (!bme.performReading()) { // je lance la lecture
     Serial.println("Failed to perform reading :("); // si ca pete j affiche et je retourne rien poru arreter
     return;
   }
