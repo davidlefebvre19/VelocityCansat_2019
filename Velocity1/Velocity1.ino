@@ -15,13 +15,14 @@ Adafruit_BME680 bme; // I2C
 //BNO config
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
+
+
 float TempBME,PresBME,AltBME,Humidity,Gas;
 
 
 void getBME() {
-  // il faut lire la doc les enfants ... :
-  if (!bme.performReading()) { // je lance la lecture
-    Serial.println("Failed to perform reading :("); // si ca pete j affiche et je retourne rien poru arreter
+  if (!bme.performReading()) { 
+    Serial.println("Failed to perform reading :("); 
     return;
   }
   // vous avez oublie de declarer toutes les variables
@@ -47,16 +48,33 @@ void getBNO() {
   Serial.print("\tZ: ");
   Serial.print(event.orientation.z, 4);
 
-  /* Optional: Display calibration status */
-
-  /* Optional: Display sensor status (debug only) */
-  //displaySensorStatus();
-
-  /* New line for the next sample */
   Serial.println("");
 
-  /* Wait the specified delay before requesting nex data */
   delay(BNO055_SAMPLERATE_DELAY_MS);
+}
+
+String dat;
+
+
+void getNano() {
+    Wire.requestFrom(5,1020);
+
+  dat = "";
+  while( Wire.available() )
+  {
+    int x = Wire.read();
+    //Serial.println((String)char(x)+":"+x);
+    dat += char(x);
+  }
+
+  saveData((String)"GPSM: " + dat);
+
+}
+
+int GPSStat() {
+
+  if(dat[0] == ';') return 1;
+  return 0;
 }
 
 
@@ -80,7 +98,6 @@ void setup (){
 
     //bno initialisation
     if(!bno.begin()){
-    /* There was a problem detecting the BNO055 ... check your connections */
     Serial.print("no BNO055 detected ... Check your wiring or I2C ADDR!");
     while(1);
 
@@ -98,4 +115,5 @@ void setup (){
 void loop () {
   getBME();
   getBNO();
+  getNano();
 }
