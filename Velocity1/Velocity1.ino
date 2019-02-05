@@ -3,10 +3,10 @@
 #include <SPI.h>
 #include <SD.h>
 #include <SoftwareSerial.h>
-#include <Adafruit_Sensor.h>
+//#include <Adafruit_Sensor.h>
 #include "Adafruit_BME680.h"
 #include <Adafruit_BNO055.h>
-#include <utility/imumaths.h>
+//#include <utility/imumaths.h>
 
 
 //Xbee config
@@ -20,9 +20,12 @@ Adafruit_BME680 bme; // I2C
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
+const unsigned long LOAD_INTERVAL = 500;
+unsigned long previousLoad = 0;
 
-float TempBME,PresBME,AltBME,Humidity,Gas;
-String conca = F(";");
+
+float TempBME,PresBME,AltBME,Humidity,Gas,ori_x,ori_z,ori_y;
+const PROGMEM char conca[] = ";";
 
 void getBME() {
   if (!bme.performReading()) {
@@ -43,17 +46,11 @@ void getBNO() {
   sensors_event_t event;
   bno.getEvent(&event);
 
-    /* Display the floating point data */
-  Serial.print("X: ");
-  Serial.print(event.orientation.x, 4);
-  Serial.print("\tY: ");
-  Serial.print(event.orientation.y, 4);
-  Serial.print("\tZ: ");
-  Serial.print(event.orientation.z, 4);
-
-  Serial.println("");
-
-  delay(BNO055_SAMPLERATE_DELAY_MS);
+  ori_x = event.orientation.x;
+  ori_y = event.orientation.y;
+  ori_z = event.orientation.z;
+  saveData((String)F("ORI: ")+ori_x+conca+ori_y+conca+ori_z);
+  //delay(BNO055_SAMPLERATE_DELAY_MS);
 }
 
 String dat;
@@ -62,28 +59,20 @@ String dat;
 void getNano() {
     Wire.requestFrom(5,1020);
 
-  dat = "";
+  dat = F("");
   while( Wire.available() )
   {
     int x = Wire.read();
-    //Serial.println((String)char(x)+":"+x);
     dat += char(x);
   }
 
-  saveData((String)"GPSM: " + dat);
+  saveData((String)F("GPSM: ") + dat);
 
-}
-
-int GPSStat() {
-
-  if(dat[0] == ';') return 1;
-  return 0;
 }
 
 
 void saveData(String dump) {
-   Serial.println(dump);
-  File dataFile = SD.open("ATT.TXT", FILE_WRITE);
+  File dataFile = SD.open(F("ATT.TXT"), FILE_WRITE);
 
   dataFile.println(dump);
   dataFile.close();
@@ -98,16 +87,12 @@ void setup (){
     xbee.begin(9600);
     //bme initialisation
     if (!bme.begin()) {
-    Serial.println("Could not find a valid BME680 sensor, check wiring!");
     while (1);
   }
 
     //bno initialisation
     if(!bno.begin()){
-    Serial.print("no BNO055 detected ... Check your wiring or I2C ADDR!");
     while(1);
-
-    delay(1000);
   }
 
     // Set up oversampling and filter initialization
@@ -119,7 +104,16 @@ void setup (){
 }
 
 void loop () {
+  unsigned long currentMillis = millis();
+  
+  // Si BLINK_INTERVAL_1 ou plus millisecondes se sont écoulés
+  if(currentMillis - previousLoad >= LOAD_INTERVAL) {
+    
+    // Garde en mémoire la valeur actuelle de millis()
+    previousLoad = currentMillis;
   getBME();
   getBNO();
   getNano();
+  }
+
 }
