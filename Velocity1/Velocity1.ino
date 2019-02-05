@@ -18,11 +18,10 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
 
 float TempBME,PresBME,AltBME,Humidity,Gas;
-
+String conca = F(";");
 
 void getBME() {
-  if (!bme.performReading()) { 
-    Serial.println("Failed to perform reading :("); 
+  if (!bme.performReading()) {
     return;
   }
   // vous avez oublie de declarer toutes les variables
@@ -32,7 +31,7 @@ void getBME() {
   Humidity = bme.humidity;
   Gas = bme.gas_resistance / 1000.0;
   //  saveData((String)F("BMP: ") + TempBMP + F(";") + PresBMP + F(";") + AltBMP+F(";")+Humidity+F(";")+Gas);
-  saveData((String)F("BMP: ") + TempBME + F(";") + PresBME + F(";") + AltBME+F(";")+Humidity+F(";")+Gas);
+  saveData((String)F("BMP: ") + TempBME + conca+ PresBME + conca+ AltBME+conca+Humidity+conca+Gas);
 }
 
 void getBNO() {
