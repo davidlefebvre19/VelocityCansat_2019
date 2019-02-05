@@ -8,6 +8,10 @@
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 
+
+//Xbee config
+SoftwareSerial xbee(3,4);
+
 //BME config
 #define SEALEVELPRESSURE_HPA (1013.25)
 Adafruit_BME680 bme; // I2C
@@ -84,12 +88,15 @@ void saveData(String dump) {
 
   dataFile.println(dump);
   dataFile.close();
+
+  Serial.println(dump);
+  xbee.println(dump);
 }
 
 
 void setup (){
     Serial.begin(9600);
-    
+    xbee.begin(9600);
     //bme initialisation
     if (!bme.begin()) {
     Serial.println("Could not find a valid BME680 sensor, check wiring!");
