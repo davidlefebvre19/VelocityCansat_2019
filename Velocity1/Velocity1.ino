@@ -19,8 +19,8 @@ Adafruit_BME680 bme; // I2C
 //BNO config
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
-
-const unsigned long LOAD_INTERVAL = 500;
+const String nameofcomp[] = {"BME : ","BNO :", "GPS : "};
+const PROGMEM unsigned long LOAD_INTERVAL = 500;
 unsigned long previousLoad = 0;
 
 
@@ -38,7 +38,9 @@ void getBME() {
   Humidity = bme.humidity;
   Gas = bme.gas_resistance / 1000.0;
   //  saveData((String)F("BMP: ") + TempBMP + F(";") + PresBMP + F(";") + AltBMP+F(";")+Humidity+F(";")+Gas);
-  saveData((String)F("BMP: ") + TempBME + conca+ PresBME + conca+ AltBME+conca+Humidity+conca+Gas);
+  //saveData((String)F("BMP: ") + TempBME + conca+ PresBME + conca+ AltBME+conca+Humidity+conca+Gas);
+  float dat[] = {0,TempBME,PresBME,AltBME,Humidity,Gas,135791};
+  saveData(dat);
 }
 
 void getBNO() {
@@ -49,7 +51,9 @@ void getBNO() {
   ori_x = event.orientation.x;
   ori_y = event.orientation.y;
   ori_z = event.orientation.z;
-  saveData((String)F("ORI: ")+ori_x+conca+ori_y+conca+ori_z);
+  float dat[] = {1,ori_x,ori_y,ori_z,135791};
+  saveData(dat);
+  //saveData((String)F("ORI: ")+ori_x+conca+ori_y+conca+ori_z);
   //delay(BNO055_SAMPLERATE_DELAY_MS);
 }
 
@@ -65,20 +69,44 @@ void getNano() {
     int x = Wire.read();
     dat += char(x);
   }
+stringSaver((String)F("GPSM: ") + dat);
+  //saveData((String)F("GPSM: ") + dat);
+//   float dat[] = {F("BMP: "),ori_x,ori_y,ori_z,135791};
+  //saveData(dat);
 
-  saveData((String)F("GPSM: ") + dat);
+
 
 }
 
-
-void saveData(String dump) {
-  File dataFile = SD.open(F("ATT.TXT"), FILE_WRITE);
-
+void stringSaver(String dump){
+    File dataFile = SD.open(F("ATT.TXT"), FILE_WRITE);
   dataFile.println(dump);
   dataFile.close();
 
   Serial.println(dump);
   xbee.println(dump);
+}
+void saveData(float dump[]) {
+  File dataFile = SD.open(F("ATT.TXT"), FILE_WRITE);
+  int i = 0;
+  String dumpString = "";
+  while(true){
+    if(dump[i] != 135791){
+      if(i==0){
+        dumpString += nameofcomp[int(dump[i])];
+      }else{
+        dumpString += dump[i];
+        dumpString +conca;
+      }
+    }else{
+      break;
+    }
+  }
+  dataFile.println(dumpString);
+  dataFile.close();
+
+  Serial.println(dumpString);
+  xbee.println(dumpString);
 }
 
 
