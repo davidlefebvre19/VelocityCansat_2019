@@ -91,13 +91,15 @@ void saveData(float dump[]) {
   int i = 0;
   String dumpString = "";
   while(true){
-    if(dump[i] != 135791){
+    Serial.println(dump[i]);
+    if(dump[i] != 135791.00){
       if(i==0){
         dumpString += nameofcomp[int(dump[i])];
       }else{
         dumpString += dump[i];
-        dumpString +conca;
+        dumpString +=conca;
       }
+      i++;
     }else{
       break;
     }
@@ -138,7 +140,7 @@ void loop () {
   if(currentMillis - previousLoad >= LOAD_INTERVAL) {
     
     // Garde en mémoire la valeur actuelle de millis()
-    previousLoad = currentMillis;
+   previousLoad = currentMillis;
   getBME();
   getBNO();
   getNano();
