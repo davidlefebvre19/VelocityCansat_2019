@@ -25,7 +25,6 @@ unsigned long previousLoad = 0;
 
 
 float TempBME,PresBME,AltBME,Humidity,Gas,ori_x,ori_z,ori_y;
-const PROGMEM char conca[] = ";";
 
 void getBME() {
   if (!bme.performReading()) {
@@ -37,8 +36,8 @@ void getBME() {
   AltBME = bme.readAltitude(SEALEVELPRESSURE_HPA);
   Humidity = bme.humidity;
   Gas = bme.gas_resistance / 1000.0;
-  //  saveData((String)F("BMP: ") + TempBMP + F(";") + PresBMP + F(";") + AltBMP+F(";")+Humidity+F(";")+Gas);
-  saveData((String)F("BMP: ") + TempBME + conca+ PresBME + conca+ AltBME+conca+Humidity+conca+Gas);
+  saveData((String)F("BMP: ") + TempBME + F(";") + PresBME + F(";") + AltBME+F(";")+Humidity+F(";")+Gas);
+  //saveData((String)F("BMP: ") + TempBME + conca+ PresBME + conca+ AltBME+conca+Humidity+conca+Gas);
 }
 
 void getBNO() {
@@ -49,7 +48,9 @@ void getBNO() {
   ori_x = event.orientation.x;
   ori_y = event.orientation.y;
   ori_z = event.orientation.z;
-  saveData((String)F("ORI: ")+ori_x+conca+ori_y+conca+ori_z);
+  //saveData((String)F("ORI: ")+ori_x+conca+ori_y+conca+ori_z);
+    saveData((String)F("ORI: ")+ori_x+F(";")+ori_y+F(";")+ori_z);
+
   //delay(BNO055_SAMPLERATE_DELAY_MS);
 }
 
