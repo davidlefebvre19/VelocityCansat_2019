@@ -10,7 +10,7 @@
 
 
 //Xbee config
-SoftwareSerial xbee(3,4);
+SoftwareSerial xbee(19,18);
 
 //BME config
 #define SEALEVELPRESSURE_HPA (1013.25)
