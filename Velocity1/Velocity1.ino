@@ -20,6 +20,15 @@ Adafruit_BME680 bme; // I2C
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
+//Pitot config
+float V_0 = 5.0; // supply voltage to the pressure sensor
+float rho = 1.204; // density of air 
+
+int offset = 0;
+int offset_size = 10;
+int veloc_mean_size = 20;
+int zero_span = 2;
+
 const unsigned long LOAD_INTERVAL = 500;
 unsigned long previousLoad = 0;
 
@@ -71,6 +80,27 @@ void getNano() {
 
 }
 
+void getPitot() {
+  float adc_avg = 0; float veloc = 0.0;
+  
+// average a few ADC readings for stability
+  for (int ii=0;ii<veloc_mean_size;ii++){
+    adc_avg+= analogRead(A0)-offset;
+  }
+  adc_avg/=veloc_mean_size;
+  
+  // make sure if the ADC reads below 512, then we equate it to a negative velocity
+  if (adc_avg>512-zero_span and adc_avg<512+zero_span){
+  } else{
+    if (adc_avg<512){
+      veloc = -sqrt((-10000.0*((adc_avg/1023.0)-0.5))/rho);
+    } else{
+      veloc = sqrt((10000.0*((adc_avg/1023.0)-0.5))/rho);
+    }
+  }
+  saveData((String)F("PITOT: ") + veloc);
+}
+
 
 void saveData(String dump) {
   File dataFile = SD.open(F("ATT.TXT"), FILE_WRITE);
@@ -96,6 +126,12 @@ void setup (){
     while(1);
   }
 
+  for (int ii=0;ii<offset_size;ii++){
+    offset += analogRead(A0)-(1023/2);
+  }
+  
+  offset /= offset_size;
+  
     // Set up oversampling and filter initialization
   bme.setTemperatureOversampling(BME680_OS_8X);
   bme.setHumidityOversampling(BME680_OS_2X);
@@ -115,6 +151,7 @@ void loop () {
   getBME();
   getBNO();
   getNano();
+  getPitot();
   }
 
 }
