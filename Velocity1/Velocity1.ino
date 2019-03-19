@@ -53,12 +53,18 @@ void getBNO() {
   //nv event pr bno
   sensors_event_t event;
   bno.getEvent(&event);
-
-  ori_x = event.orientation.x;
-  ori_y = event.orientation.y;
-  ori_z = event.orientation.z;
-  //saveData((String)F("ORI: ")+ori_x+conca+ori_y+conca+ori_z);
-    saveData((String)F("ORI: ")+ori_x+F(";")+ori_y+F(";")+ori_z);
+  //imu::Quaternion quat = bno.getQuat();
+  imu::Vector<3> magnet = bno.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);
+  imu::Vector<3> gyrosc = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
+  //imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+  imu::Vector<3> acc = bno.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
+  //imu::Vector<3> lacc = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
+  //imu::Vector<3> grav = bno.getVector(Adafruit_BNO055::VECTOR_GRAVITY);
+  
+  double AccX = acc.x();
+  double AccY = acc.y();
+  double AccZ = acc.z();
+  saveData((String)"BNOA: " + AccX + ";" + AccY + ";" + AccZ);
 
   //delay(BNO055_SAMPLERATE_DELAY_MS);
 }
