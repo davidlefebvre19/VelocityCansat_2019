@@ -18,7 +18,7 @@ SoftwareSerial xbee(19,18);
 Adafruit_BME680 bme; // I2C
 
 //GPS config
-SoftwareSerial mySerial(3, 2);
+SoftwareSerial mySerial(0, 1);
 #define GPSECHO  true
 Adafruit_GPS GPS(&mySerial);
 boolean usingInterrupt = false;
@@ -100,20 +100,6 @@ void getBNO() {
 String dat;
 
 
-void getNano() {
-    Wire.requestFrom(5,1020);
-
-  dat = F("");
-  while( Wire.available() )
-  {
-    int x = Wire.read();
-    dat += char(x);
-  }
-
-  saveData((String)F("GPSM: ") + dat);
-
-}
-
 void getPitot() {
   float adc_avg = 0; float veloc = 0.0;
   
@@ -135,6 +121,7 @@ void getPitot() {
   saveData((String)F("PITOT: ") + veloc);
 }
 
+uint32_t timer = millis();
 void getGPS () {
     // in case you are not using the interrupt above, you'll
   // need to 'hand query' the GPS, not suggested :(
@@ -191,6 +178,7 @@ void getGPS () {
       Serial.print("Satellites: "); Serial.println((int)GPS.satellites);
     }
   }
+
 }
 
 void saveData(String dump) {
@@ -209,9 +197,7 @@ void setup (){
     xbee.begin(9600);
 
     //GPS initialisation
-    if(!GPS.begin()) {
-    while (1);
-  }
+    GPS.begin(9600);
     
     //bme initialisation
     if (!bme.begin()) {
@@ -246,7 +232,6 @@ void setup (){
 }
 
 
-uint32_t timer = millis();
 void loop () {
   unsigned long currentMillis = millis();
   
@@ -257,7 +242,6 @@ void loop () {
     previousLoad = currentMillis;
   getBME();
   getBNO();
-  getNano();
   getPitot();
   getGPS();
   }
