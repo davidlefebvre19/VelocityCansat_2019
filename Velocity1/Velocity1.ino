@@ -33,7 +33,7 @@ const unsigned long LOAD_INTERVAL = 500;
 unsigned long previousLoad = 0;
 
 
-float TempBME,PresBME,AltBME,Humidity,Gas,ori_x,ori_z,ori_y;
+float TempBME,PresBME,AltBME,Humidity,Gas,acc_x,acc_z,acc_y;
 
 void getBME() {
   if (!bme.performReading()) {
@@ -65,21 +65,6 @@ void getBNO() {
 }
 
 String dat;
-
-
-void getNano() {
-    Wire.requestFrom(5,1020);
-
-  dat = F("");
-  while( Wire.available() )
-  {
-    int x = Wire.read();
-    dat += char(x);
-  }
-
-  saveData((String)F("GPSM: ") + dat);
-
-}
 
 void getPitot() {
   float adc_avg = 0; float veloc = 0.0;
@@ -151,7 +136,6 @@ void loop () {
     previousLoad = currentMillis;
   getBME();
   getBNO();
-  getNano();
   getPitot();
   }
 
