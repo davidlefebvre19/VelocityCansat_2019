@@ -7,7 +7,21 @@
 #include "Adafruit_BME680.h"
 #include <Adafruit_BNO055.h>
 //#include <utility/imumaths.h>
+#include <RH_RF95.h>
 
+//RFM config
+#define RFM95_CS 10
+#define RFM95_RST 9
+#define RFM95_INT 2
+ 
+#define RF95_FREQ 434.0
+
+// Singleton instance of the radio driver
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
+
+
+//SD config
+File myFile;
 
 //Xbee config
 SoftwareSerial xbee(19,18);
@@ -33,7 +47,7 @@ const unsigned long LOAD_INTERVAL = 500;
 unsigned long previousLoad = 0;
 
 
-float TempBME,PresBME,AltBME,Humidity,Gas,ori_x,ori_z,ori_y;
+float TempBME,PresBME,AltBME,Humidity,Gas,acc_x,acc_z,acc_y;
 
 void getBME() {
   if (!bme.performReading()) {
@@ -53,6 +67,7 @@ void getBNO() {
   //nv event pr bno
   sensors_event_t event;
   bno.getEvent(&event);
+
   //imu::Quaternion quat = bno.getQuat();
   imu::Vector<3> magnet = bno.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);
   imu::Vector<3> gyrosc = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
@@ -70,21 +85,6 @@ void getBNO() {
 }
 
 String dat;
-
-
-void getNano() {
-    Wire.requestFrom(5,1020);
-
-  dat = F("");
-  while( Wire.available() )
-  {
-    int x = Wire.read();
-    dat += char(x);
-  }
-
-  saveData((String)F("GPSM: ") + dat);
-
-}
 
 void getPitot() {
   float adc_avg = 0; float veloc = 0.0;
@@ -109,7 +109,7 @@ void getPitot() {
 
 
 void saveData(String dump) {
-  File dataFile = SD.open(F("ATT.TXT"), FILE_WRITE);
+  File dataFile = SD.open(F("ATT.txt"), FILE_WRITE);
 
   dataFile.println(dump);
   dataFile.close();
@@ -122,21 +122,49 @@ void saveData(String dump) {
 void setup (){
     Serial.begin(9600);
     xbee.begin(9600);
+
+    //RFM initialisation
+    pinMode(RFM95_RST, OUTPUT);
+    digitalWrite(RFM95_RST, HIGH);
+
+    digitalWrite(RFM95_RST, LOW);
+    delay(10);
+    digitalWrite(RFM95_RST, HIGH);
+    delay(10);
+
+    if (!rf95.init()) {
+    while (1);
+    }
+
+    if (!rf95.setFrequency(RF95_FREQ)) {
+    while(1);
+    }
+    rf95.setTxPower(23, false);
+
+    
+    //SD init - config
+    pinMode(53, OUTPUT);
+    
+    if (!SD.begin()) {
+    while (1);
+    }
+    
     //bme initialisation
     if (!bme.begin()) {
     while (1);
-  }
+    }
 
     //bno initialisation
     if(!bno.begin()){
     while(1);
-  }
+    }
 
-  for (int ii=0;ii<offset_size;ii++){
+    //Pitot config
+    for (int ii=0;ii<offset_size;ii++){
     offset += analogRead(A0)-(1023/2);
-  }
+    }
   
-  offset /= offset_size;
+    offset /= offset_size;
   
     // Set up oversampling and filter initialization
   bme.setTemperatureOversampling(BME680_OS_8X);
@@ -156,7 +184,6 @@ void loop () {
     previousLoad = currentMillis;
   getBME();
   getBNO();
-  getNano();
   getPitot();
   }
 
