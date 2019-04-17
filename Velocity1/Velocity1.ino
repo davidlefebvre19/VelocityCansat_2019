@@ -7,6 +7,19 @@
 #include "Adafruit_BME680.h"
 #include <Adafruit_BNO055.h>
 //#include <utility/imumaths.h>
+#include <RH_RF95.h>
+
+//RFM config
+#define RFM95_CS 10
+#define RFM95_RST 9
+#define RFM95_INT 2
+ 
+// Change to 434.0 or other frequency, must match RX's freq!
+#define RF95_FREQ 434.0
+
+// Singleton instance of the radio driver
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
+
 
 //SD config
 File myFile;
@@ -105,29 +118,48 @@ void setup (){
     Serial.begin(9600);
     xbee.begin(9600);
 
-    //SD init - config
-    pinMode(53, OUTPUT);
-    if (!SD.begin()) {
+    //RFM initialisation
+    pinMode(RFM95_RST, OUTPUT);
+    digitalWrite(RFM95_RST, HIGH);
+
+    digitalWrite(RFM95_RST, LOW);
+    delay(10);
+    digitalWrite(RFM95_RST, HIGH);
+    delay(10);
+
+    if (!rf95.init()) {
     while (1);
     }
 
+    if (!rf95.setFrequency(RF95_FREQ)) {
+    while(1);
+    }
+    rf95.setTxPower(23, false);
 
+    
+    //SD init - config
+    pinMode(53, OUTPUT);
+    
+    if (!SD.begin()) {
+    while (1);
+    }
     
     //bme initialisation
     if (!bme.begin()) {
     while (1);
-  }
+    }
 
     //bno initialisation
     if(!bno.begin()){
     while(1);
-  }
+    }
 
-  for (int ii=0;ii<offset_size;ii++){
+    //Pitot config
+    for (int ii=0;ii<offset_size;ii++){
     offset += analogRead(A0)-(1023/2);
-  }
+    }
   
-  offset /= offset_size;
+    offset /= offset_size;
   
     // Set up oversampling and filter initialization
   bme.setTemperatureOversampling(BME680_OS_8X);
