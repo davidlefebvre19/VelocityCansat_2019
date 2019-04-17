@@ -8,6 +8,8 @@
 #include <Adafruit_BNO055.h>
 //#include <utility/imumaths.h>
 
+//SD config
+File myFile;
 
 //Xbee config
 SoftwareSerial xbee(19,18);
@@ -89,7 +91,7 @@ void getPitot() {
 
 
 void saveData(String dump) {
-  File dataFile = SD.open(F("ATT.TXT"), FILE_WRITE);
+  File dataFile = SD.open(F("ATT.txt"), FILE_WRITE);
 
   dataFile.println(dump);
   dataFile.close();
@@ -102,6 +104,15 @@ void saveData(String dump) {
 void setup (){
     Serial.begin(9600);
     xbee.begin(9600);
+
+    //SD init - config
+    pinMode(53, OUTPUT);
+    if (!SD.begin()) {
+    while (1);
+    }
+
+
+    
     //bme initialisation
     if (!bme.begin()) {
     while (1);
