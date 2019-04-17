@@ -53,12 +53,13 @@ void getBNO() {
   //nv event pr bno
   sensors_event_t event;
   bno.getEvent(&event);
+    imu::Vector<3> acc = bno.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
 
-  ori_x = event.orientation.x;
-  ori_y = event.orientation.y;
-  ori_z = event.orientation.z;
-  //saveData((String)F("ORI: ")+ori_x+conca+ori_y+conca+ori_z);
-    saveData((String)F("ORI: ")+ori_x+F(";")+ori_y+F(";")+ori_z);
+
+  double AccX = acc.x();
+  double AccY = acc.y();
+  double AccZ = acc.z();
+  saveData((String)"BNOA: " + AccX + ";" + AccY + ";" + AccZ);
 
   //delay(BNO055_SAMPLERATE_DELAY_MS);
 }
