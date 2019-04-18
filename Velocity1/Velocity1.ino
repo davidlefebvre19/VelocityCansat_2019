@@ -6,19 +6,7 @@
 //#include <Adafruit_Sensor.h>
 #include "Adafruit_BME680.h"
 #include <Adafruit_BNO055.h>
-//#include <utility/imumaths.h>
-#include <RH_RF95.h>
-
-//RFM config
-#define RFM95_CS 10
-#define RFM95_RST 9
-#define RFM95_INT 2
- 
-#define RF95_FREQ 434.0
-
-// Singleton instance of the radio driver
-RH_RF95 rf95(RFM95_CS, RFM95_INT);
-
+//#include <utility/imumaths.h>u
 
 //SD config
 File myFile;
@@ -122,25 +110,6 @@ void saveData(String dump) {
 void setup (){
     Serial.begin(9600);
     xbee.begin(9600);
-
-    //RFM initialisation
-    pinMode(RFM95_RST, OUTPUT);
-    digitalWrite(RFM95_RST, HIGH);
-
-    digitalWrite(RFM95_RST, LOW);
-    delay(10);
-    digitalWrite(RFM95_RST, HIGH);
-    delay(10);
-
-    if (!rf95.init()) {
-    while (1);
-    }
-
-    if (!rf95.setFrequency(RF95_FREQ)) {
-    while(1);
-    }
-    rf95.setTxPower(23, false);
-
     
     //SD init - config
     pinMode(53, OUTPUT);
