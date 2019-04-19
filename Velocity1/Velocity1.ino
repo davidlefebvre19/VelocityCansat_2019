@@ -7,6 +7,18 @@
 #include "Adafruit_BME680.h"
 #include <Adafruit_BNO055.h>
 //#include <utility/imumaths.h>u
+#include <Adafruit_GPS.h>
+
+
+//GPS config
+HardwareSerial mySerial = Serial2;
+
+Adafruit_GPS GPS(&Serial2); //or Serial2, Serial3, etc.
+
+#define GPSECHO  true
+
+boolean usingInterrupt = false;
+void useInterrupt(boolean);
 
 //SD config
 File myFile;
@@ -95,6 +107,37 @@ void getPitot() {
   saveData((String)F("PITOT: ") + veloc);
 }
 
+uint32_t timer = millis();
+void getGPS() {
+   // in case you are not using the interrupt above, you'll
+  // need to 'hand query' the GPS, not suggested :(
+  if (! usingInterrupt) {
+    // read data from the GPS in the 'main loop'
+    char c = GPS.read();
+    // if you want to debug, this is a good time to do it!
+    if (GPSECHO)
+      if (c) Serial.print(c);
+  }
+  
+  // if a sentence is received, we can check the checksum, parse it...
+  if (GPS.newNMEAreceived()) {
+    // a tricky thing here is if we print the NMEA sentence, or data
+    // we end up not listening and catching other sentences! 
+    // so be very wary if using OUTPUT_ALLDATA and trytng to print out data
+    //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
+  
+    if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
+      return;  // we can fail to parse a sentence in which case we should just wait for another
+  }
+  
+  if (timer > millis())  timer = millis();
+  
+  if (millis() - timer > 2000) { 
+    timer = millis();
+    saveData((String)F("GPSgm: ") + GPS.latitudeDegrees);
+    saveData((String)F("GPSsp: ") + GPS.speed);
+  }
+}
 
 void saveData(String dump) {
   File dataFile = SD.open(F("ATT.txt"), FILE_WRITE);
@@ -110,6 +153,23 @@ void saveData(String dump) {
 void setup (){
     Serial.begin(9600);
     xbee.begin(9600);
+
+    //GPS initialisation
+    GPS.begin(9600);
+  
+    // uncomment this line to turn on RMC (recommended minimum) and GGA (fix data) including altitude
+    GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+
+    // Set the update rate
+    GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
+    // For the parsing code to work nicely and have time to sort thru the data, and
+    // print it out we don't suggest using anything higher than 1 Hz
+
+    // Request updates on antenna status, comment out to keep quiet
+    GPS.sendCommand(PGCMD_ANTENNA);
+
+    useInterrupt(true);
+
     
     //SD init - config
     pinMode(53, OUTPUT);
@@ -143,6 +203,32 @@ void setup (){
   bme.setGasHeater(320, 150); // 320*C for 150 ms
 }
 
+// Interrupt is called once a millisecond, looks for any new GPS data, and stores it
+SIGNAL(TIMER0_COMPA_vect) {
+  char c = GPS.read();
+  // if you want to debug, this is a good time to do it!
+#ifdef UDR0
+  if (GPSECHO)
+    if (c) UDR0 = c;  
+    // writing direct to UDR0 is much much faster than Serial.print 
+    // but only one character can be written at a time. 
+#endif
+}
+
+void useInterrupt(boolean v) {
+  if (v) {
+    // Timer0 is already used for millis() - we'll just interrupt somewhere
+    // in the middle and call the "Compare A" function above
+    OCR0A = 0xAF;
+    TIMSK0 |= _BV(OCIE0A);
+    usingInterrupt = true;
+  } else {
+    // do not call the interrupt function COMPA anymore
+    TIMSK0 &= ~_BV(OCIE0A);
+    usingInterrupt = false;
+  }
+}
+
 void loop () {
   unsigned long currentMillis = millis();
   
@@ -154,6 +240,7 @@ void loop () {
   getBME();
   getBNO();
   getPitot();
+  getGPS();
   }
 
 }
