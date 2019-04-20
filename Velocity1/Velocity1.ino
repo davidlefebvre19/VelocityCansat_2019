@@ -99,6 +99,14 @@ void getPitot() {
   saveData((String)F("PITOT: ") + veloc);
 }
 
+void getBuzzer() {
+  //buzzer et impact
+  fsrReading = analogRead(fsrPin);
+  saveData((String)F("FSR: ") + fsrReading);
+  if (fsrReading > 10) {
+    tone(buzzer, 5000 );
+  }
+}
 
 void saveData(String dump) {
   File dataFile = SD.open(F("ATT.txt"), FILE_WRITE);
@@ -160,12 +168,6 @@ void loop () {
   getBME();
   getBNO();
   getPitot();
-  }
-  //buzzer et impact
-  fsrReading = analogRead(fsrPin);
-  Serial.println(fsrReading);  
-  if (fsrReading > 10) {
-    tone(buzzer, 5000 );
-  }
-
+  getBuzzer();
+  }  
 }
