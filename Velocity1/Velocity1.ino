@@ -34,7 +34,11 @@ int zero_span = 2;
 const unsigned long LOAD_INTERVAL = 500;
 unsigned long previousLoad = 0;
 
-
+//Buzzer and impact config
+int fsrPin = 1;     // the FSR and 10K pulldown are connected to a1
+int fsrReading;     // the analog reading from the FSR resistor divider
+const int buzzer = 15; //buzzer to arduino pin 15
+//
 float TempBME,PresBME,AltBME,Humidity,Gas,acc_x,acc_z,acc_y;
 
 void getBME() {
@@ -95,6 +99,14 @@ void getPitot() {
   saveData((String)F("PITOT: ") + veloc);
 }
 
+void getBuzzer() {
+  //buzzer et impact
+  fsrReading = analogRead(fsrPin);
+  saveData((String)F("FSR: ") + fsrReading);
+  if (fsrReading > 10) {
+    tone(buzzer, 5000 );
+  }
+}
 
 void saveData(String dump) {
   File dataFile = SD.open(F("ATT.txt"), FILE_WRITE);
@@ -141,6 +153,8 @@ void setup (){
   bme.setPressureOversampling(BME680_OS_4X);
   bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
   bme.setGasHeater(320, 150); // 320*C for 150 ms
+  //Buzzer
+  pinMode(buzzer, OUTPUT); // Set buzzer - pin 9 as an output
 }
 
 void loop () {
@@ -154,6 +168,6 @@ void loop () {
   getBME();
   getBNO();
   getPitot();
-  }
-
+  getBuzzer();
+  }  
 }
