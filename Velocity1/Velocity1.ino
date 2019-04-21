@@ -1,4 +1,6 @@
-//implementation lora
+//implementation lora base sur le code rf95_reliable_datagram_client.pde
+//donc utiliser le code reciproque pour le server/RX cad le recepteur
+//le code lora est identifiable par des **************
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
@@ -7,6 +9,8 @@
 #include "Adafruit_BME680.h"
 #include <Adafruit_BNO055.h>
 //#include <utility/imumaths.h>u
+#include <RHReliableDatagram.h>
+#include <RH_RF95.h>
 
 //SD config
 File myFile;
@@ -21,6 +25,12 @@ Adafruit_BME680 bme; // I2C
 //BNO config
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
+
+//**********Lora config
+#define CLIENT_ADDRESS 1
+#define SERVER_ADDRESS 2
+RH_RF95 driver;
+RHReliableDatagram manager(driver, CLIENT_ADDRESS);
 
 //Pitot config
 float V_0 = 5.0; // supply voltage to the pressure sensor
@@ -110,6 +120,11 @@ void saveData(String dump) {
 void setup (){
     Serial.begin(9600);
     xbee.begin(9600);
+    //***********attention pour le lora
+    // Ensure serial flash is not interfering with radio communication on SPI bus
+    // metre le CS en pin 4
+    //  pinMode(4, OUTPUT);
+    //  digitalWrite(4, HIGH);
     
     //SD init - config
     pinMode(53, OUTPUT);
@@ -143,6 +158,12 @@ void setup (){
   bme.setGasHeater(320, 150); // 320*C for 150 ms
 }
 
+//pour le lora 
+uint8_t data[] = "Hello World!";
+// Dont put this on the stack:
+uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+
+
 void loop () {
   unsigned long currentMillis = millis();
   
@@ -155,5 +176,29 @@ void loop () {
   getBNO();
   getPitot();
   }
-
+  //***************test code exemple lora rf95
+  Serial.println("Sending to rf95_reliable_datagram_server");
+    
+  // Send a message to manager_server
+  if (manager.sendtoWait(data, sizeof(data), SERVER_ADDRESS))
+  {
+    // Now wait for a reply from the server
+    uint8_t len = sizeof(buf);
+    uint8_t from;   
+    if (manager.recvfromAckTimeout(buf, &len, 2000, &from))
+    {
+      Serial.print("got reply from : 0x");
+      Serial.print(from, HEX);
+      Serial.print(": ");
+      Serial.println((char*)buf);
+    }
+    else
+    {
+      Serial.println("No reply, is rf95_reliable_datagram_server running?");
+    }
+  }
+  else
+    Serial.println("sendtoWait failed");
+  delay(500);
+  
 }
