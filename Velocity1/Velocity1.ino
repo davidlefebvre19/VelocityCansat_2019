@@ -35,7 +35,7 @@ const unsigned long LOAD_INTERVAL = 500;
 unsigned long previousLoad = 0;
 
 //Buzzer and impact config
-int fsrPin = A2;     // the FSR and 10K pulldown are connected to a1
+int fsrPin = 1;     // the FSR and 10K pulldown are connected to a1
 int fsrReading;     // the analog reading from the FSR resistor divider
 const int buzzer = 15; //buzzer to arduino pin 15
 //
