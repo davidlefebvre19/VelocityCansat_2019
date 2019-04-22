@@ -7,6 +7,8 @@
 #include "Adafruit_BME680.h"
 #include <Adafruit_BNO055.h>
 //#include <utility/imumaths.h>u
+#include "pitches.h"
+
 
 //SD config
 File myFile;
@@ -37,7 +39,42 @@ unsigned long previousLoad = 0;
 //Buzzer and impact config
 int fsrPin = 1;     // the FSR and 10K pulldown are connected to a1
 int fsrReading;     // the analog reading from the FSR resistor divider
-const int buzzer = 15; //buzzer to arduino pin 15
+
+int buzzerPin = 15;
+
+int melody[] = {
+  NOTE_G4, NOTE_C5, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_E4, NOTE_E4, 
+  NOTE_A4, NOTE_G4, NOTE_F4, NOTE_G4, NOTE_C4, NOTE_C4, 
+  NOTE_D4, NOTE_D4, NOTE_E4, NOTE_F4, NOTE_F4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_D5, 
+  NOTE_E5, NOTE_D5, NOTE_C5, NOTE_D5, NOTE_B4, NOTE_G4, 
+  NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_E4, NOTE_E4, 
+  NOTE_A4, NOTE_G4, NOTE_F4, NOTE_G4, NOTE_C4, NOTE_C4, 
+  NOTE_C5, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_B4, NOTE_C5, NOTE_D5, 
+  NOTE_E5, NOTE_D5, NOTE_C5, NOTE_B4, NOTE_C5, NOTE_D5, NOTE_G4, NOTE_G4, NOTE_B4, NOTE_C5, NOTE_D5,
+  NOTE_C5, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_E4, NOTE_E4, NOTE_G4, NOTE_A4, NOTE_B4,
+  NOTE_C5, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_A4, NOTE_C5, NOTE_F5,
+  NOTE_F5, NOTE_E5, NOTE_D5, NOTE_C5, NOTE_D5, NOTE_E5, NOTE_C5, NOTE_C5,
+  NOTE_D5, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_A4, NOTE_A4,
+  NOTE_C5, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_C4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_C5
+};
+
+int noteDurations[] = {
+  8, 4, 6, 16, 4, 8, 8, 
+  4, 6, 16, 4, 8, 8, 
+  4, 8, 8, 4, 8, 8, 4, 8, 8, 2,
+  4, 6, 16, 4, 8, 8, 
+  4, 6, 16, 4, 8, 8, 
+  4, 6, 16, 4, 6, 16, 
+  4, 6, 16, 8, 8, 8, 8, 
+  2, 8, 8, 8, 8, 3, 8, 8, 8, 8, 8,
+  2, 8, 8, 8, 8, 3, 8, 8, 8, 8, 8,
+  4, 6, 16, 4, 6, 16, 4, 8, 8, 2,
+  2, 8, 8, 8, 8, 3, 8, 2,
+  2, 8, 8, 8, 8, 3, 8, 2,
+  4, 6, 16, 4, 4, 2, 4, 4, 1
+};
+
+
 //
 float TempBME,PresBME,AltBME,Humidity,Gas,acc_x,acc_z,acc_y;
 
@@ -104,7 +141,13 @@ void getBuzzer() {
   fsrReading = analogRead(fsrPin);
   saveData((String)F("FSR: ") + fsrReading);
   if (fsrReading > 10) {
-    tone(buzzer, 5000 );
+      for (int thisNote = 0; thisNote < sizeof(melody) / 2; thisNote++) {
+    int noteDuration = 2000 / noteDurations[thisNote];
+    tone(buzzerPin, melody[thisNote], noteDuration);
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    noTone(buzzerPin);
+  }
   }
 }
 
@@ -154,7 +197,6 @@ void setup (){
   bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
   bme.setGasHeater(320, 150); // 320*C for 150 ms
   //Buzzer
-  pinMode(buzzer, OUTPUT); // Set buzzer - pin 9 as an output
 }
 
 void loop () {
