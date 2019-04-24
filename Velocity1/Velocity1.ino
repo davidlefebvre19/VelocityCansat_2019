@@ -8,6 +8,23 @@
 #include <Adafruit_BNO055.h>
 //#include <utility/imumaths.h>u
 #include "pitches.h"
+#include <RHReliableDatagram.h>
+#include <RH_RF95.h>
+#include <SPI.h>
+
+//LoRa config
+#define RFM95_CS 4
+#define RFM95_RST 29
+#define RFM95_INT 2
+
+#define RF95_FREQ 434.0
+
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
+
+
+// Singleton instance of the radio driver
+RH_RF95 driver;
+//RH_RF95 driver(5, 2); // Rocket Scream Mini Ultra Pro with the RFM95W
 
 
 //SD config
@@ -92,6 +109,52 @@ void getBME() {
   //saveData((String)F("BMP: ") + TempBME + conca+ PresBME + conca+ AltBME+conca+Humidity+conca+Gas);
 }
 
+int16_t packetnum = 0;  // packet counter, we increment per xmission
+
+void getLora() {
+  digitalWrite(53, LOW);
+  digitalWrite(4, HIGH);
+  Serial.println("Sending to rf95_server");
+  // Send a message to rf95_server
+  
+  char radiopacket[20] = "Hello World #      ";
+  itoa(packetnum++, radiopacket+13, 10);
+  Serial.print("Sending "); Serial.println(radiopacket);
+  radiopacket[19] = 0;
+  
+  Serial.println("Sending..."); delay(10);
+  rf95.send((uint8_t *)radiopacket, 20);
+
+  Serial.println("Waiting for packet to complete..."); delay(10);
+  rf95.waitPacketSent();
+  // Now wait for a reply
+  uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+  uint8_t len = sizeof(buf);
+
+  Serial.println("Waiting for reply..."); delay(10);
+  if (rf95.waitAvailableTimeout(1000))
+  { 
+    // Should be a reply message for us now   
+    if (rf95.recv(buf, &len))
+   {
+      Serial.print("Got reply: ");
+      Serial.println((char*)buf);
+      Serial.print("RSSI: ");
+      Serial.println(rf95.lastRssi(), DEC);    
+    }
+    else
+    {
+      Serial.println("Receive failed");
+    }
+  }
+  else
+  {
+    Serial.println("No reply, is there a listener around?");
+  }
+  digitalWrite(4, LOW); 
+  digitalWrite(53, HIGH);
+}
+
 void getBNO() {
   //nv event pr bno
   sensors_event_t event;
@@ -152,6 +215,8 @@ void getBuzzer() {
 }
 
 void saveData(String dump) {
+  digitalWrite(4, LOW);
+  digitalWrite(53, HIGH);
   File dataFile = SD.open(F("ATT.txt"), FILE_WRITE);
 
   dataFile.println(dump);
@@ -159,12 +224,35 @@ void saveData(String dump) {
 
   Serial.println(dump);
   xbee.println(dump);
+  digitalWrite(53, LOW);
+  digitalWrite(4, HIGH);
 }
 
 
 void setup (){
     Serial.begin(9600);
     xbee.begin(9600);
+
+    //LoRa
+    pinMode(53,OUTPUT);
+    pinMode(RFM95_RST, OUTPUT);
+    digitalWrite(53,LOW);
+    delay(1000);
+    digitalWrite(RFM95_RST, HIGH);
+
+    // manual reset
+    digitalWrite(RFM95_RST, LOW);
+    delay(10);
+    digitalWrite(RFM95_RST, HIGH);
+    delay(10);
+
+    while (!rf95.init()) {
+    Serial.println("LoRa radio init failed");
+    while (1);
+    }
+    Serial.println("LoRa radio init OK!");
+
+    rf95.setTxPower(23, false);
     
     //SD init - config
     pinMode(53, OUTPUT);
@@ -211,5 +299,6 @@ void loop () {
   getBNO();
   getPitot();
   getBuzzer();
+  getLora();
   }  
 }
