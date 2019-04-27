@@ -273,9 +273,9 @@ void setup (){
     GPS.sendCommand(PGCMD_ANTENNA);
     useInterrupt(true);
 
-  delay(1000);
+    delay(1000);
 
-  mySerial.println(PMTK_Q_RELEASE);
+    mySerial.println(PMTK_Q_RELEASE);
     
     //RGBconfig
     pinMode(RED, OUTPUT);
@@ -300,7 +300,6 @@ void setup (){
     delay(1000);
     digitalWrite(RFM95_RST, HIGH);
 
-    // manual reset
     digitalWrite(RFM95_RST, LOW);
     delay(10);
     digitalWrite(RFM95_RST, HIGH);
@@ -321,6 +320,7 @@ void setup (){
       Serial.println("SD FAILED");
     while (1);
     }
+
     
     //bme initialisation
     if (!bme.begin()) {
@@ -340,12 +340,14 @@ void setup (){
     offset /= offset_size;
   
     // Set up oversampling and filter initialization
-  bme.setTemperatureOversampling(BME680_OS_8X);
-  bme.setHumidityOversampling(BME680_OS_2X);
-  bme.setPressureOversampling(BME680_OS_4X);
-  bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
-  bme.setGasHeater(320, 150); // 320*C for 150 ms
-  //Buzzer
+    bme.setTemperatureOversampling(BME680_OS_8X);
+    bme.setHumidityOversampling(BME680_OS_2X);
+    bme.setPressureOversampling(BME680_OS_4X);
+    bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
+    bme.setGasHeater(320, 150); // 320*C for 150 ms
+    //Buzzer
+        Serial.println("test");
+
 }
 
 void loop () {
@@ -367,8 +369,8 @@ void loop () {
   greenValue = 0;
   blueValue = 255;
 
-    analogWrite(RED, redValue);
-    analogWrite(GREEN, greenValue);
-    analogWrite(BLUE, greenValue);
-  }  
+  analogWrite(RED, redValue);
+  analogWrite(GREEN, greenValue);
+  analogWrite(BLUE, greenValue);
+ }  
 }
