@@ -112,7 +112,7 @@ void getBNO() {
   double AccX = acc.x();
   double AccY = acc.y();
   double AccZ = acc.z();
-  saveData((String)"BNOA: " + AccX + ";" + AccY + ";" + AccZ);
+  saveData((String)F("BNOA: ") + AccX + ";" + AccY + ";" + AccZ);
 
   //delay(BNO055_SAMPLERATE_DELAY_MS);
 }
@@ -143,7 +143,8 @@ void useInterrupt(boolean v) {
   }
 }
 
-
+uint32_t timer = millis();
+char c;
 void getGPS() {
  if (GPS.newNMEAreceived()) {
 
@@ -168,6 +169,7 @@ void getGPS() {
     } else{
       GPS_data += "0;0;0;";
     }
+}
 }
 
 String dat;
