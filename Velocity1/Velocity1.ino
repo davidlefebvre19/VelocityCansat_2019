@@ -264,7 +264,6 @@ void setup (){
     Serial.begin(9600);
     xbee.begin(9600);
 
-<<<<<<< HEAD
     //GPS
     GPS.begin(9600);
     GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
@@ -276,7 +275,6 @@ void setup (){
 
   mySerial.println(PMTK_Q_RELEASE);
     
-=======
     //RGBconfig
     pinMode(RED, OUTPUT);
     pinMode(GREEN, OUTPUT);
@@ -293,7 +291,6 @@ void setup (){
     analogWrite(GREEN, greenValue);
     analogWrite(BLUE, greenValue);
 
->>>>>>> a430ee1b299b772962e3b75a5d4b847e96199e1c
     //LoRa
     pinMode(53,OUTPUT);
     pinMode(RFM95_RST, OUTPUT);
