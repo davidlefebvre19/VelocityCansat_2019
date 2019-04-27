@@ -12,6 +12,15 @@
 #include <RH_RF95.h>
 #include <SPI.h>
 
+//LED
+#define BLUE A2
+#define GREEN A4
+#define RED A6
+
+int redValue;
+int greenValue;
+int blueValue;
+
 //LoRa config
 #define RFM95_CS 4
 #define RFM95_RST 29
@@ -193,6 +202,22 @@ void setup (){
     Serial.begin(9600);
     xbee.begin(9600);
 
+    //RGBconfig
+    pinMode(RED, OUTPUT);
+    pinMode(GREEN, OUTPUT);
+    pinMode(BLUE, OUTPUT);
+    digitalWrite(RED, HIGH);
+    digitalWrite(GREEN, LOW);
+    digitalWrite(BLUE, LOW);
+
+    redValue = 255; // choose a value between 1 and 255 to change the color.
+    greenValue = 0;
+    blueValue = 0;
+
+    analogWrite(RED, redValue);
+    analogWrite(GREEN, greenValue);
+    analogWrite(BLUE, greenValue);
+
     //LoRa
     pinMode(53,OUTPUT);
     pinMode(RFM95_RST, OUTPUT);
@@ -261,5 +286,13 @@ void loop () {
   getPitot();
   getBuzzer();
   getLora();
+  
+  redValue = 0;
+  greenValue = 0;
+  blueValue = 255;
+
+    analogWrite(RED, redValue);
+    analogWrite(GREEN, greenValue);
+    analogWrite(BLUE, greenValue);
   }  
 }
