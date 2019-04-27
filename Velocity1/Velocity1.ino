@@ -21,6 +21,15 @@ boolean usingInterrupt = false;
 void useInterrupt(boolean);
 
 
+//LED
+#define BLUE A2
+#define GREEN A4
+#define RED A6
+
+int redValue;
+int greenValue;
+int blueValue;
+
 //LoRa config
 #define RFM95_CS 4
 #define RFM95_RST 29
@@ -255,6 +264,7 @@ void setup (){
     Serial.begin(9600);
     xbee.begin(9600);
 
+<<<<<<< HEAD
     //GPS
     GPS.begin(9600);
     GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
@@ -266,6 +276,24 @@ void setup (){
 
   mySerial.println(PMTK_Q_RELEASE);
     
+=======
+    //RGBconfig
+    pinMode(RED, OUTPUT);
+    pinMode(GREEN, OUTPUT);
+    pinMode(BLUE, OUTPUT);
+    digitalWrite(RED, HIGH);
+    digitalWrite(GREEN, LOW);
+    digitalWrite(BLUE, LOW);
+
+    redValue = 255; // choose a value between 1 and 255 to change the color.
+    greenValue = 0;
+    blueValue = 0;
+
+    analogWrite(RED, redValue);
+    analogWrite(GREEN, greenValue);
+    analogWrite(BLUE, greenValue);
+
+>>>>>>> a430ee1b299b772962e3b75a5d4b847e96199e1c
     //LoRa
     pinMode(53,OUTPUT);
     pinMode(RFM95_RST, OUTPUT);
@@ -335,5 +363,13 @@ void loop () {
   getGPS();
   getBuzzer();
   getLora();
+  
+  redValue = 0;
+  greenValue = 0;
+  blueValue = 255;
+
+    analogWrite(RED, redValue);
+    analogWrite(GREEN, greenValue);
+    analogWrite(BLUE, greenValue);
   }  
 }
