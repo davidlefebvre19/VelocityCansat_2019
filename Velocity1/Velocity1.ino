@@ -17,7 +17,7 @@
 #define RFM95_RST 29
 #define RFM95_INT 2
 
-#define RF95_FREQ 434.0
+#define RF95_FREQ 433.0
 
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
@@ -58,40 +58,7 @@ int fsrPin = 1;     // the FSR and 10K pulldown are connected to a1
 int fsrReading;     // the analog reading from the FSR resistor divider
 
 int buzzerPin = 15;
-
-int melody[] = {
-  NOTE_G4, NOTE_C5, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_E4, NOTE_E4, 
-  NOTE_A4, NOTE_G4, NOTE_F4, NOTE_G4, NOTE_C4, NOTE_C4, 
-  NOTE_D4, NOTE_D4, NOTE_E4, NOTE_F4, NOTE_F4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_D5, 
-  NOTE_E5, NOTE_D5, NOTE_C5, NOTE_D5, NOTE_B4, NOTE_G4, 
-  NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_E4, NOTE_E4, 
-  NOTE_A4, NOTE_G4, NOTE_F4, NOTE_G4, NOTE_C4, NOTE_C4, 
-  NOTE_C5, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_B4, NOTE_C5, NOTE_D5, 
-  NOTE_E5, NOTE_D5, NOTE_C5, NOTE_B4, NOTE_C5, NOTE_D5, NOTE_G4, NOTE_G4, NOTE_B4, NOTE_C5, NOTE_D5,
-  NOTE_C5, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_E4, NOTE_E4, NOTE_G4, NOTE_A4, NOTE_B4,
-  NOTE_C5, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_A4, NOTE_C5, NOTE_F5,
-  NOTE_F5, NOTE_E5, NOTE_D5, NOTE_C5, NOTE_D5, NOTE_E5, NOTE_C5, NOTE_C5,
-  NOTE_D5, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_B4, NOTE_C5, NOTE_A4, NOTE_A4,
-  NOTE_C5, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_C4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_C5
-};
-
-int noteDurations[] = {
-  8, 4, 6, 16, 4, 8, 8, 
-  4, 6, 16, 4, 8, 8, 
-  4, 8, 8, 4, 8, 8, 4, 8, 8, 2,
-  4, 6, 16, 4, 8, 8, 
-  4, 6, 16, 4, 8, 8, 
-  4, 6, 16, 4, 6, 16, 
-  4, 6, 16, 8, 8, 8, 8, 
-  2, 8, 8, 8, 8, 3, 8, 8, 8, 8, 8,
-  2, 8, 8, 8, 8, 3, 8, 8, 8, 8, 8,
-  4, 6, 16, 4, 6, 16, 4, 8, 8, 2,
-  2, 8, 8, 8, 8, 3, 8, 2,
-  2, 8, 8, 8, 8, 3, 8, 2,
-  4, 6, 16, 4, 4, 2, 4, 4, 1
-};
-
-
+boolean buzzerActif= false;
 //
 float TempBME,PresBME,AltBME,Humidity,Gas,acc_x,acc_z,acc_y;
 
@@ -110,50 +77,6 @@ void getBME() {
 }
 
 int16_t packetnum = 0;  // packet counter, we increment per xmission
-
-void getLora() {
-  digitalWrite(53, LOW);
-  digitalWrite(4, HIGH);
-  Serial.println("Sending to rf95_server");
-  // Send a message to rf95_server
-  
-  char radiopacket[20] = "Hello World #      ";
-  itoa(packetnum++, radiopacket+13, 10);
-  Serial.print("Sending "); Serial.println(radiopacket);
-  radiopacket[19] = 0;
-  
-  Serial.println("Sending..."); delay(10);
-  rf95.send((uint8_t *)radiopacket, 20);
-
-  Serial.println("Waiting for packet to complete..."); delay(10);
-  rf95.waitPacketSent();
-  // Now wait for a reply
-  uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-  uint8_t len = sizeof(buf);
-
-  Serial.println("Waiting for reply..."); delay(10);
-  if (rf95.waitAvailableTimeout(1000))
-  { 
-    // Should be a reply message for us now   
-    if (rf95.recv(buf, &len))
-   {
-      Serial.print("Got reply: ");
-      Serial.println((char*)buf);
-      Serial.print("RSSI: ");
-      Serial.println(rf95.lastRssi(), DEC);    
-    }
-    else
-    {
-      Serial.println("Receive failed");
-    }
-  }
-  else
-  {
-    Serial.println("No reply, is there a listener around?");
-  }
-  digitalWrite(4, LOW); 
-  digitalWrite(53, HIGH);
-}
 
 void getBNO() {
   //nv event pr bno
@@ -203,20 +126,13 @@ void getBuzzer() {
   //buzzer et impact
   fsrReading = analogRead(fsrPin);
   saveData((String)F("FSR: ") + fsrReading);
-  if (fsrReading > 10) {
-      for (int thisNote = 0; thisNote < sizeof(melody) / 2; thisNote++) {
-    int noteDuration = 2000 / noteDurations[thisNote];
-    tone(buzzerPin, melody[thisNote], noteDuration);
-    int pauseBetweenNotes = noteDuration * 1.30;
-    delay(pauseBetweenNotes);
-    noTone(buzzerPin);
-  }
+  if (buzzerActif ==true){
+    tone(buzzerPin,1000,90000);
   }
 }
 
 void saveData(String dump) {
-  digitalWrite(4, LOW);
-  digitalWrite(53, HIGH);
+  startSD();
   File dataFile = SD.open(F("ATT.txt"), FILE_WRITE);
 
   dataFile.println(dump);
@@ -224,8 +140,52 @@ void saveData(String dump) {
 
   Serial.println(dump);
   xbee.println(dump);
-  digitalWrite(53, LOW);
-  digitalWrite(4, HIGH);
+  
+  startLora();
+  
+  Serial.println("Sending to rf95_server");
+  // Send a message to rf95_server
+  int16_t packetnum = 0;
+
+    packetnum += 1; // increment 
+
+    // --- Compose the Message to send ------------
+    String packet_str = String("LORA-"+dump );
+    // send to Serial
+    Serial.print( packet_str.c_str() );
+    // Send over Radio
+    rf95.send((uint8_t *)(packet_str.c_str()), packet_str.length());
+    rf95.waitPacketSent();
+
+    // Now wait for a reply
+    uint8_t buf[4]; // We limit the quantity received data
+    uint8_t len = sizeof(buf);
+ 
+    if (rf95.waitAvailableTimeout(200))  { 
+      // Should be a reply message for us now   
+      if (rf95.recv(buf, &len)) {
+          Serial.print(": ");
+          Serial.println((char*)buf);
+      } else {
+          Serial.println("Receive failed");
+      }
+    } else {
+        Serial.println("No reply, is another RFM69 listening?");
+    }
+startSD();
+}
+
+void getLora() {
+
+}
+void startLora(){
+  digitalWrite(53,HIGH);
+  digitalWrite(RFM95_CS,LOW);
+}
+void startSD(){
+   digitalWrite(RFM95_CS,HIGH);
+
+  digitalWrite(53,LOW);
 }
 
 
@@ -236,7 +196,7 @@ void setup (){
     //LoRa
     pinMode(53,OUTPUT);
     pinMode(RFM95_RST, OUTPUT);
-    digitalWrite(53,LOW);
+    startLora();
     delay(1000);
     digitalWrite(RFM95_RST, HIGH);
 
@@ -255,9 +215,10 @@ void setup (){
     rf95.setTxPower(23, false);
     
     //SD init - config
-    pinMode(53, OUTPUT);
-    
+    startSD();
+    delay(1500);
     if (!SD.begin()) {
+      Serial.println("SD FAILED");
     while (1);
     }
     
