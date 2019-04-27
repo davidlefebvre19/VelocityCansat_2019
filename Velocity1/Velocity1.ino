@@ -71,50 +71,6 @@ boolean buzzerActif= false;
 //
 float TempBME,PresBME,AltBME,Humidity,Gas,acc_x,acc_z,acc_y;
 
-void saveData(String dump) {
-  startSD();
-  File dataFile = SD.open(F("ATT.txt"), FILE_WRITE);
-
-  dataFile.println(dump);
-  dataFile.close();
-
-  Serial.println(dump);
-  xbee.println(dump);
-  
-  startLora();
-  
-  Serial.println("Sending to rf95_server");
-  // Send a message to rf95_server
-  int16_t packetnum = 0;
-
-    packetnum += 1; // increment 
-
-    // --- Compose the Message to send ------------
-    String packet_str = String("LORA-"+dump );
-    // send to Serial
-    Serial.print( packet_str.c_str() );
-    // Send over Radio
-    rf95.send((uint8_t *)(packet_str.c_str()), packet_str.length());
-    rf95.waitPacketSent();
-
-    // Now wait for a reply
-    uint8_t buf[4]; // We limit the quantity received data
-    uint8_t len = sizeof(buf);
- 
-    if (rf95.waitAvailableTimeout(200))  { 
-      // Should be a reply message for us now   
-      if (rf95.recv(buf, &len)) {
-          Serial.print(": ");
-          Serial.println((char*)buf);
-      } else {
-          Serial.println("Receive failed");
-      }
-    } else {
-        Serial.println("No reply, is another RFM69 listening?");
-    }
-startSD();
-}
-
 void getBME() {
   if (!bme.performReading()) {
     return;
@@ -178,8 +134,7 @@ void useInterrupt(boolean v) {
   }
 }
 
-uint32_t timer = millis();
-char c;
+
 void getGPS() {
  if (GPS.newNMEAreceived()) {
 
@@ -238,7 +193,49 @@ void getBuzzer() {
   }
 }
 
+void saveData(String dump) {
+  startSD();
+  File dataFile = SD.open(F("ATT.txt"), FILE_WRITE);
 
+  dataFile.println(dump);
+  dataFile.close();
+
+  Serial.println(dump);
+  xbee.println(dump);
+  
+  startLora();
+  
+  Serial.println("Sending to rf95_server");
+  // Send a message to rf95_server
+  int16_t packetnum = 0;
+
+    packetnum += 1; // increment 
+
+    // --- Compose the Message to send ------------
+    String packet_str = String("LORA-"+dump );
+    // send to Serial
+    Serial.print( packet_str.c_str() );
+    // Send over Radio
+    rf95.send((uint8_t *)(packet_str.c_str()), packet_str.length());
+    rf95.waitPacketSent();
+
+    // Now wait for a reply
+    uint8_t buf[4]; // We limit the quantity received data
+    uint8_t len = sizeof(buf);
+ 
+    if (rf95.waitAvailableTimeout(200))  { 
+      // Should be a reply message for us now   
+      if (rf95.recv(buf, &len)) {
+          Serial.print(": ");
+          Serial.println((char*)buf);
+      } else {
+          Serial.println("Receive failed");
+      }
+    } else {
+        Serial.println("No reply, is another RFM69 listening?");
+    }
+startSD();
+}
 
 void getLora() {
 
