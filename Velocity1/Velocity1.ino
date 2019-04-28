@@ -160,8 +160,8 @@ void getGPS() {
     timer = millis();
 
     if (GPS.fix==1) {
-    saveData((String)F("GPS_dataLat : ") + (GPS.latitudeDegrees,4));
-    saveData((String)F("GPS_dataLong : ") + (GPS.longitudeDegrees,4));
+    saveData((String)F("GPS_dataLat : ") + (GPS.latitudeDegrees, 4));
+    saveData((String)F("GPS_dataLong : ") + (GPS.longitudeDegrees, 4));
     saveData((String)F("GPS_dataAlt : ") + (GPS.altitude));
     saveData((String)F("GPS_dataSp : ") + (GPS.speed));
     } 
