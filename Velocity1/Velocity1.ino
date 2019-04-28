@@ -159,15 +159,14 @@ void getGPS() {
   if (millis() - timer > 200) {
     timer = millis();
 
-    String GPS_data = "";
     if (GPS.fix==1) {
-      String lat = String(GPS.latitudeDegrees,4);
-      String lon = String(GPS.longitudeDegrees,4);
-      GPS_data += lat+";"+lon;
-      GPS_data += ";" + String(GPS.altitude,1);
-      GPS_data += ";";
-    } else{
-      GPS_data += "0;0;0;";
+    saveData((String)F("GPS_dataLat : ") + (GPS.latitudeDegrees,4));
+    saveData((String)F("GPS_dataLong : ") + (GPS.longitudeDegrees,4));
+    saveData((String)F("GPS_dataAlt : ") + (GPS.altitude));
+    saveData((String)F("GPS_dataSp : ") + (GPS.speed));
+    } 
+    else{
+      saveData((String)F("GPS_data = 0,0,0,0"));
     }
 }
 }
@@ -243,7 +242,7 @@ void saveData(String dump) {
           Serial.println("Receive failed");
       }
     } else {
-        Serial.println("No reply, is another RFM69 listening?");
+        Serial.println("   caution : NO REPLY");
     }
 startSD();
 }
@@ -317,20 +316,22 @@ void setup (){
     startSD();
     delay(1500);
     if (!SD.begin()) {
-      Serial.println("SD FAILED");
+    Serial.println("SD FAILED");
     while (1);
     }
 
     
     //bme initialisation
     if (!bme.begin()) {
+    Serial.println("BME FAILED");
     while (1);
     }
-
     //bno initialisation
     if(!bno.begin()){
+    Serial.println("BNO FAILED");
     while(1);
     }
+       Serial.println("test");
 
     //Pitot config
     for (int ii=0;ii<offset_size;ii++){
@@ -346,7 +347,7 @@ void setup (){
     bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
     bme.setGasHeater(320, 150); // 320*C for 150 ms
     //Buzzer
-        Serial.println("test");
+ 
 
 }
 
