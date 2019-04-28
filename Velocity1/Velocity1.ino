@@ -77,6 +77,7 @@ int fsrReading;     // the analog reading from the FSR resistor divider
 
 int buzzerPin = 15;
 boolean buzzerActif= false;
+boolean fsrActif= false;
 //
 float TempBME,PresBME,AltBME,Humidity,Gas,acc_x,acc_z,acc_y;
 
@@ -238,11 +239,26 @@ void saveData(String dump) {
       if (rf95.recv(buf, &len)) {
           Serial.print(": ");
           Serial.println((char*)buf);
+          if ((char*)buf == "buzzup") {
+            boolean buzzerActif= true;
+          }
+          else if ((char*)buf == "buzzdown") {
+            boolean buzzerActif= false;          
+          }
+          else if ((char*)buf == "fsrup") {
+            boolean buzzerActif= true; 
+          }
+          else if ((char*)buf == "fsrdown") {
+            boolean buzzerActif= false; 
+          }
+          else {
+          }
       } else {
           Serial.println("Receive failed");
       }
-    } else {
-        Serial.println("   caution : NO REPLY");
+    } 
+    else {
+      Serial.println("   caution : NO REPLY");
     }
 startSD();
 }
