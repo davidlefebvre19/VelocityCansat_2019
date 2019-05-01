@@ -68,7 +68,7 @@ int offset_size = 10;
 int veloc_mean_size = 20;
 int zero_span = 2;
 
-const unsigned long LOAD_INTERVAL = 500;
+const unsigned long LOAD_INTERVAL = 200;
 unsigned long previousLoad = 0;
 
 //Buzzer and impact config
@@ -154,19 +154,16 @@ void getGPS() {
 
   if (timer > millis())  timer = millis();
 
-  delay(10);
 
-  if (millis() - timer > 200) {
+  if (millis() - timer > 100) {
     timer = millis();
 
     if (GPS.fix==1) {
-    saveData((String)F("GPS_dataLat : ") + String(GPS.latitudeDegrees, 5));
-    saveData((String)F("GPS_dataLong : ") + String(GPS.longitudeDegrees, 5));
-    saveData((String)F("GPS_dataAlt : ") + (GPS.altitude));
-    saveData((String)F("GPS_dataSp : ") + (GPS.speed));
+    saveData((String)F("GPS1: ") + String(GPS.latitudeDegrees, 5) + ";" + String(GPS.longitudeDegrees, 5) + ";" + (GPS.altitude));
+    saveData((String)F("GPS2: ") + (GPS.speed));
     } 
     else{
-      saveData((String)F("GPS_data = 0,0,0,0"));
+      saveData((String)F("GPS_data: 0;0;0;0"));
     }
 }
 }
@@ -215,34 +212,38 @@ void saveData(String dump) {
   
   startLora();
   
-  Serial.println("Sending to rf95_server");
+  //Serial.println("Sending to rf95_server");
   // Send a message to rf95_server
-  int16_t packetnum = 0;
+  int8_t packetnum = 0;
 
     packetnum += 1; // increment 
 
-    // --- Compose the Message to send ------------
-    String packet_str = String("LORA-"+dump );
+    // --- Compose the Message to send ----------
+    String packet_str = String("LORA-"+dump+"\n" );
     // send to Serial
-    Serial.print( packet_str.c_str() );
-    // Send over Radio
+    Serial.println( packet_str.c_str() );
+    // Send over Ruezadio
+    analogWrite(RED,0);
+    analogWrite(BLUE,1024);
+    analogWrite(GREEN,1024);
+
     rf95.send((uint8_t *)(packet_str.c_str()), packet_str.length());
     rf95.waitPacketSent();
 
     // Now wait for a reply
-    uint8_t buf[4]; // We limit the quantity received data
-    uint8_t len = sizeof(buf);
+    uint8_t buf[6]; // We limit the quantity received data
+    uint8_t len = sizeof(buf[6]);
  
-    if (rf95.waitAvailableTimeout(200))  { 
+    if (rf95.waitAvailableTimeout(10))  { 
       // Should be a reply message for us now   
       if (rf95.recv(buf, &len)) {
-          Serial.print(": ");
-          Serial.println((char*)buf);
+          //Serial.print(": ");
+          //Serial.println((char*)buf);
       } else {
-          Serial.println("Receive failed");
+          //Serial.println("Receive failed");
       }
     } else {
-        Serial.println("   caution : NO REPLY");
+        //Serial.println("   caution : NO REPLY");
     }
 startSD();
 }
@@ -263,10 +264,12 @@ void startSD(){
 
 void setup (){
     Serial.begin(9600);
+    
     xbee.begin(9600);
 
     //GPS
     GPS.begin(9600);
+
     GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
     GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); 
     GPS.sendCommand(PGCMD_ANTENNA);
@@ -305,10 +308,12 @@ void setup (){
     delay(10);
 
     while (!rf95.init()) {
-    Serial.println("LoRa radio init failed");
-    while (1);
+    //Serial.println("LoRa radio init failed");
+    analogWrite(RED, 1024);
+    analogWrite(GREEN, 0);
+    analogWrite(BLUE, 0);
     }
-    Serial.println("LoRa radio init OK!");
+    //Serial.println("LoRa radio init OK!");
 
     rf95.setTxPower(23, false);
     
@@ -317,21 +322,26 @@ void setup (){
     delay(1500);
     if (!SD.begin()) {
     Serial.println("SD FAILED");
-    while (1);
+    analogWrite(RED, 1024);
+    analogWrite(GREEN, 0);
+    analogWrite(BLUE, 0);
     }
 
     
     //bme initialisation
     if (!bme.begin()) {
     Serial.println("BME FAILED");
-    while (1);
+        analogWrite(RED, 1024);
+    analogWrite(GREEN, 0);
+    analogWrite(BLUE, 0);
     }
     //bno initialisation
     if(!bno.begin()){
     Serial.println("BNO FAILED");
-    while(1);
+    analogWrite(RED, 1024);
+    analogWrite(GREEN, 0);
+    analogWrite(BLUE, 0);
     }
-       Serial.println("test");
 
     //Pitot config
     for (int ii=0;ii<offset_size;ii++){
@@ -347,7 +357,9 @@ void setup (){
     bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
     bme.setGasHeater(320, 150); // 320*C for 150 ms
     //Buzzer
- 
+     analogWrite(RED, 0);
+    analogWrite(GREEN, 1024);
+    analogWrite(BLUE, 0);
 
 }
 
@@ -359,6 +371,8 @@ void loop () {
     
     // Garde en mémoire la valeur actuelle de millis()
     previousLoad = currentMillis;
+    saveData((String)"millis: "+millis());
+
   getBME();
   getBNO();
   getPitot();
