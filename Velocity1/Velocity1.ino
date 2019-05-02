@@ -219,7 +219,7 @@ void saveData(String dump) {
     packetnum += 1; // increment 
 
     // --- Compose the Message to send ----------
-    String packet_str = String("LORA"+dump);
+    String packet_str = String("LORA"+ String(dump) + " /n");
     // send to Serial
     Serial.println( packet_str.c_str() );
     // Send over Ruezadio
@@ -227,7 +227,7 @@ void saveData(String dump) {
     analogWrite(BLUE,1024);
     analogWrite(GREEN,1024);
 
-    rf95.send((uint8_t *)(packet_str.c_str()), packet_str.length());
+    rf95.send((uint8_t *)(packet_str.c_str()), 200);
     rf95.waitPacketSent();
 
     // Now wait for a reply
@@ -336,13 +336,17 @@ void setup (){
     analogWrite(BLUE, 0);
     }
     //bno initialisation
+    /*
     if(!bno.begin()){
     Serial.println("BNO FAILED");
     analogWrite(RED, 1024);
     analogWrite(GREEN, 0);
     analogWrite(BLUE, 0);
     }
-
+    */
+      bno.begin(bno.OPERATION_MODE_AMG);
+      bno.set16GRange();
+      bno.setExtCrystalUse(true);
     //Pitot config
     for (int ii=0;ii<offset_size;ii++){
     offset += analogRead(A0)-(1023/2);
