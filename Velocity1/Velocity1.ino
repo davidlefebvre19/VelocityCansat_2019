@@ -219,7 +219,7 @@ void saveData(String dump) {
     packetnum += 1; // increment 
 
     // --- Compose the Message to send ----------
-    String packet_str = String("LORA-"+dump+"\n" );
+    String packet_str = String("LORA"+dump);
     // send to Serial
     Serial.println( packet_str.c_str() );
     // Send over Ruezadio
@@ -371,7 +371,7 @@ void loop () {
     
     // Garde en mémoire la valeur actuelle de millis()
     previousLoad = currentMillis;
-    saveData((String)"millis: "+millis());
+    //saveData((String)"millis: "+millis());
 
   getBME();
   getBNO();
