@@ -207,7 +207,7 @@ void saveData(String dump) {
   dataFile.println(dump);
   dataFile.close();
 
-  Serial.println(dump);
+  //Serial.println(dump);
   xbee.println(dump);
   
   startLora();
@@ -221,11 +221,8 @@ void saveData(String dump) {
     // --- Compose the Message to send ----------
     String packet_str = String("LORA"+ String(dump) + " /n");
     // send to Serial
-    Serial.println( packet_str.c_str() );
+    //Serial.println( packet_str.c_str() );
     // Send over Ruezadio
-    analogWrite(RED,0);
-    analogWrite(BLUE,1024);
-    analogWrite(GREEN,1024);
 
     rf95.send((uint8_t *)(packet_str.c_str()), 200);
     rf95.waitPacketSent();
@@ -309,9 +306,7 @@ void setup (){
 
     while (!rf95.init()) {
     //Serial.println("LoRa radio init failed");
-    analogWrite(RED, 1024);
-    analogWrite(GREEN, 0);
-    analogWrite(BLUE, 0);
+
     }
     //Serial.println("LoRa radio init OK!");
 
@@ -322,18 +317,14 @@ void setup (){
     delay(1500);
     if (!SD.begin()) {
     Serial.println("SD FAILED");
-    analogWrite(RED, 1024);
-    analogWrite(GREEN, 0);
-    analogWrite(BLUE, 0);
+
     }
 
     
     //bme initialisation
     if (!bme.begin()) {
     Serial.println("BME FAILED");
-        analogWrite(RED, 1024);
-    analogWrite(GREEN, 0);
-    analogWrite(BLUE, 0);
+
     }
     //bno initialisation
     /*
@@ -361,9 +352,9 @@ void setup (){
     bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
     bme.setGasHeater(320, 150); // 320*C for 150 ms
     //Buzzer
-     analogWrite(RED, 0);
+     analogWrite(RED, 1024);
     analogWrite(GREEN, 1024);
-    analogWrite(BLUE, 0);
+    analogWrite(BLUE, 1024);
 
 }
 
@@ -375,7 +366,7 @@ void loop () {
     
     // Garde en mémoire la valeur actuelle de millis()
     previousLoad = currentMillis;
-    //saveData((String)"millis: "+millis());
+    saveData((String)"millis: "+millis());
 
   getBME();
   getBNO();
@@ -383,13 +374,5 @@ void loop () {
   getGPS();
   getBuzzer();
   getLora();
-  
-  redValue = 0;
-  greenValue = 0;
-  blueValue = 255;
-
-  analogWrite(RED, redValue);
-  analogWrite(GREEN, greenValue);
-  analogWrite(BLUE, greenValue);
  }  
 }
